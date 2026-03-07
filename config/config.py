@@ -74,7 +74,7 @@ HTTP_SETTINGS = {
     "retries": get_env_int("HTTP_RETRIES", 3),
 }
 
-# 旧単独定数（互換用）
+# 旧単独定数(互換用)
 HTTP_TIMEOUT = HTTP_SETTINGS["timeout"]
 MAX_CONNECTIONS = HTTP_SETTINGS["max_connections"]
 
@@ -176,6 +176,36 @@ YTDLP_EXTRA = {
     "external_downloader": get_env_str("YTDLP_EXTERNAL_DOWNLOADER") or None,
     "external_downloader_args": get_env_str("YTDLP_EXTERNAL_DOWNLOADER_ARGS") or None,
 }
+
+# ==================================================================
+# 10-1. yt-dlp EJS (External JavaScript) 設定
+# ==================================================================
+
+YTDLP_EJS_SETTINGS = {
+    "enabled": get_env_bool("YTDLP_EJS_ENABLED", True),
+    "runtime": get_env_str("YTDLP_EJS_RUNTIME", "deno"),  # deno, nodejs, quickjs, bun
+    "remote_components": get_env_str("YTDLP_EJS_REMOTE_COMPONENTS", "ejs:github"),  # ejs:github, ejs:npm
+}
+
+# EJS設定が有効な場合、YTDLP_OPTIONSに追加
+if YTDLP_EJS_SETTINGS["enabled"]:
+    # ランタイムの指定（denoの場合は自動検出されるため不要だが、明示的に指定も可能）
+    if YTDLP_EJS_SETTINGS["runtime"] != "deno":
+        YTDLP_EXTRA["external_downloader"] = YTDLP_EJS_SETTINGS["runtime"]
+    
+    # EJS引数の設定
+    ejs_args = ["--remote-components", YTDLP_EJS_SETTINGS["remote_components"]]
+    
+    # 既存の external_downloader_args がある場合はマージ
+    existing_args = YTDLP_EXTRA.get("external_downloader_args")
+    if existing_args:
+        if isinstance(existing_args, str):
+            # 文字列の場合は辞書に変換
+            YTDLP_EXTRA["external_downloader_args"] = {"ejs": ejs_args}
+        elif isinstance(existing_args, dict):
+            existing_args["ejs"] = ejs_args
+    else:
+        YTDLP_EXTRA["external_downloader_args"] = {"ejs": ejs_args}
 
 # ==================================================================
 # 11. ストリーム抽出関連

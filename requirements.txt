@@ -2,6 +2,7 @@ fastapi
 uvicorn
 httpx
 yt-dlp
+yt-dlp-ejs
 aiocache
 selenium
 webdriver-manager
